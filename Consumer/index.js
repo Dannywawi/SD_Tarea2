@@ -3,8 +3,8 @@ const express = require('express');
 const { Kafka } = require('kafkajs')
 
 const kafka = new Kafka({
-  clientId: 'my-app',
-  brokers: ['kafka1:9092', 'kafka2:9092']
+  clientId: 'my-app2',
+  brokers: ['kafka:9092']
 })
 
 const consumer = kafka.consumer({ groupId: 'test-group' })
@@ -16,13 +16,14 @@ app.get("/", (req, res) =>{
 })
 
 app.get("/blocked", (req, res) =>{
-  res.send("<h1>CONSUMEEEEEEER <br> Lista de blockeados</h1>");
+  //falta hacer que lea el json
   const run = async () => {
     await consumer.connect()
     await consumer.subscribe({ topic: 'test-topic', fromBeginning: true })
   
     await consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
+        res.send(message.value.toString())
         console.log({
           partition,
           offset: message.offset,
@@ -31,9 +32,28 @@ app.get("/blocked", (req, res) =>{
       },
     })
   }
+  run().catch(console.error)
 })
 
 app.listen(5000, () => {
     console.log("Started server on 5000 CONSUMER");
   });
+
+  const run = async () => {
+    // Consuming
+    await consumer.connect()
+    await consumer.subscribe({ topic: 'test-topic', fromBeginning: true })
+  
+    await consumer.run({
+      eachMessage: async ({ topic, partition, message }) => {
+
+        console.log({
+          partition,
+          offset: message.offset,
+          value: message.value.toString(),
+        })
+      },
+    })
+  }
+  
   
